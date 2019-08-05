@@ -1,7 +1,7 @@
 urls = [];
 var decUri = [];
 var subreddit = "videos";
-var amount = 25;
+var amount = 3;
 
 var decodeHTML = function (html) {
 	var txt = document.createElement('textarea');
@@ -9,15 +9,22 @@ var decodeHTML = function (html) {
 	return txt.value;
 };
 
+function onPlayerReady(event) {
+    var embedCode = event.target.getVideoEmbedCode();
+    event.target.playVideo();
+    if (document.getElementById('embed-code')) {
+      document.getElementById('embed-code').innerHTML = embedCode;
+    }
+  }
+
+var player = []
+
 $.ajax({
     url: "https://www.reddit.com/r/" + subreddit + "/hot.json?limit=" + amount,
 
     success: function (result) {
-        console.log(result)
 
         amount = result.data.dist
-
-        console.log(amount)
 
         for (let i = 0; i <= amount - 1; i++) {
 
@@ -25,12 +32,14 @@ $.ajax({
 
             decUri[i] = decodeHTML(urls[i])
 
-            console.log(decUri[i]);
+            console.log(decUri[i])
 
             $( decUri[i]
-            ).appendTo('#videoContainer').css({"width": "600px", "height": "300px"});
+            ).appendTo('#videoContainer').attr('id', 'player' + i).css({"width": "600px", "height": "300px"});
 
-            $("").css("background-color");
+            player[i] = $('#player' + i)
         }
     }
 })
+
+player[0].setPlayerState(1)
