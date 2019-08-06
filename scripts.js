@@ -1,37 +1,65 @@
 
 
 urls = [];
-var decUri = [];
 var subreddit = "videos";
-var amount = 1;
+var amount = 50;
 
 var player = []
+var y = 0;
 
-var player;
-function onYouTubeIframeAPIReady() {
-    player = new YT.Player('player', {
-        height: '390',
-        width: '640',
-        videoId: 'wNo7qoLRtkQ',
-        events: {
-            'onReady': onPlayerReady,
-            'onStateChange': onPlayerStateChange
+function onYouTubeIframeAPIReady(id) {
+    $.ajax({
+        url: "https://www.reddit.com/r/" + subreddit + "/hot.json?limit=" + amount,
+
+        success: function (result) {
+
+            amount = result.data.dist
+
+            for (let i = 0; i <= amount - 1; i++) {
+
+                var url = result.data.children[i].data.url
+
+                urls[i] = parseYoutubeId(url)
+
+                $('#playerContainer').append('<div class="vh-100"><div id="video_' + i + '"></div></div>')
+
+                player[i] = new YT.Player('video_' + i, {
+                    height: '100%',
+                    width: '100%',
+                    videoId: urls[i],
+                    events: {
+
+                        'onStateChange': onPlayerStateChange
+                    }
+                });
+            }
+            console.log(urls)
         }
-    });
+    })
 }
 
-$.ajax({
-    url: "https://www.reddit.com/r/" + subreddit + "/hot.json?limit=" + amount,
 
-    success: function (result) {
+// 4. The API will call this function when the video player is ready.
 
-        amount = result.data.dist
 
-        for (let i = 0; i <= amount - 1; i++) {
+// 5. The API calls this function when the player's state changes.
+//    The function indicates that when playing a video (state=1),
+//    the player should play for six seconds and then stop.
 
-            urls[i] = result.data.children[i].data.url
-
-            console.log(decUri[i])
-        }
+function onPlayerStateChange(event) {
+    if (event.data == YT.PlayerState.ENDED) {
+        player[y].playVideo();
+        $('html, body').animate({
+            scrollTop: $("#video_" + y).offset().top
+          }, 1000)
+          y++
     }
-})
+}
+
+
+function parseYoutubeId(url) {
+    var regExp = /^.*((youtu.be\/)|(v\/)|(\/u\/\w\/)|(embed\/)|(watch\?))\??v?=?([^#\&\?]*).*/;
+    var match = url.match(regExp);
+    return (match && match[7].length == 11) ? match[7] : false;
+}
+
