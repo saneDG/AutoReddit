@@ -1,42 +1,73 @@
+// 6.8.2019 saneDG
 
+// KORJATTAVAA
+// kun haetaan videoita samasta subredditistä. Haku alkaa alusta ja haetut videot tulevat tuplana.
+// kun haetaan videoita useammasta subredditistä. videoId ei jatku vaan alkaa alusta.
 
-urls = [];
-var subreddit = "videos";
-var amount = 10;
+var urls = [];
+var subreddit = "";
+var amount = 2;
 var player = []
 var y = 0;
+var x = 0;
+var youtubeUrlMatch;
+var actualVideo;
 
-function onYouTubeIframeAPIReady(id) {
-    $.ajax({
-        url: "https://www.reddit.com/r/" + subreddit + "/hot.json?limit=" + amount,
-        success: function (result) {
-            amount = result.data.dist;
+$(".btn").on("click", function (e) {
 
-            for (let i = 0; i <= amount - 1; i++) {
-                var url = result.data.children[i].data.url;
-                urls[i] = parseYoutubeId(url);
+  amount = $('.form-control').val()
+  console.log(amount)
+  subreddit = $(this).attr("value")
 
-                $('#playerContainer').append('<div class="vh-100"><div id="video_' + i + '"></div></div>');
+  $.ajax({
 
-                player[i] = new YT.Player('video_' + i, {
-                    height: '100%',
-                    width: '100%',
-                    videoId: urls[i],
-                    events: {
-                        'onStateChange': onPlayerStateChange
-                    }
-                });
-                
-                /*
-                console.log(player[i])
-                $("html").keypress(function(data) {
-                    console.log(data)
-                })
-                */
+    url: "https://www.reddit.com/r/" + subreddit + "/hot.json?limit=" + amount,
+    success: function (result) {
+
+      amount = result.data.dist;
+
+      for (let i = 0; i <= amount - 1; i++) {
+
+        var url = result.data.children[i].data.url;
+
+        actualVideo = checkIfYoutubeUrl(url)
+
+        if (actualVideo != null) {
+
+          urls[x] = parseYoutubeId(url);
+
+          $('#playerContainer').append('<div class="vh-100"><div id="video_' + x + '"></div></div>');
+
+          player[x] = new YT.Player('video_' + x, {
+            height: '100%',
+            width: '100%',
+            videoId: urls[x],
+            events: {
+              'onStateChange': onPlayerStateChange
             }
+          });
+
+          x++
+
+          $('html, body').animate({
+            scrollTop: $("#video_" + y).offset().top
+          }, 500);
+
         }
-    });
-}
+
+
+
+        /*
+        console.log(player[i])
+        $("html").keypress(function(data) {
+            console.log(data)
+        })
+        */
+      }
+    }
+  });
+});
+
 
 // 5. The API calls this function when the player's state changes.
 //    The function indicates that when playing a video (state=1),
@@ -44,33 +75,43 @@ function onYouTubeIframeAPIReady(id) {
 
 var lastEndedId;
 
+
+
 function onPlayerStateChange(event) {
 
-    if (event.data == YT.PlayerState.ENDED) {
+  if (event.data == YT.PlayerState.ENDED) {
 
-        if (event.target.a.id != lastEndedId) {
+    if (event.target.a.id != lastEndedId) {
 
-            lastEndedId = event.target.a.id;
-            y++;
-            player[y].playVideo();
+      lastEndedId = event.target.a.id;
+      y++;
+      player[y].playVideo();
 
-            $('html, body').animate({
-                scrollTop: $("#video_" + y).offset().top
-            }, 500);
+      $('html, body').animate({
+        scrollTop: $("#video_" + y).offset().top
+      }, 500);
 
-        }
     }
+  }
 }
 
-function skipVideo(){
-    
+function skipVideo() {
+
 }
 
+function checkIfYoutubeUrl(url) {
+  var regExp = /^(http(s)?:\/\/)?((w){3}.)?youtu(be|.be)?(\.com)?\/.+/;
+  var youtubeUrlMatch = url.match(regExp);
+
+  console.log(youtubeUrlMatch);
+
+  return youtubeUrlMatch;
+}
 
 function parseYoutubeId(url) {
-    var regExp = /^.*((youtu.be\/)|(v\/)|(\/u\/\w\/)|(embed\/)|(watch\?))\??v?=?([^#\&\?]*).*/;
-    var match = url.match(regExp);
+  var regExp = /^.*((youtu.be\/)|(v\/)|(\/u\/\w\/)|(embed\/)|(watch\?))\??v?=?([^#\&\?]*).*/;
+  var match = url.match(regExp);
 
-    return (match && match[7].length == 11) ? match[7] : false;
+  return (match && match[7].length == 11) ? match[7] : false;
 }
 
