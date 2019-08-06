@@ -1,23 +1,24 @@
+
+
 urls = [];
 var decUri = [];
 var subreddit = "videos";
-var amount = 3;
-
-var decodeHTML = function (html) {
-	var txt = document.createElement('textarea');
-	txt.innerHTML = html;
-	return txt.value;
-};
-
-function onPlayerReady(event) {
-    var embedCode = event.target.getVideoEmbedCode();
-    event.target.playVideo();
-    if (document.getElementById('embed-code')) {
-      document.getElementById('embed-code').innerHTML = embedCode;
-    }
-  }
+var amount = 1;
 
 var player = []
+
+var player;
+function onYouTubeIframeAPIReady() {
+    player = new YT.Player('player', {
+        height: '390',
+        width: '640',
+        videoId: 'wNo7qoLRtkQ',
+        events: {
+            'onReady': onPlayerReady,
+            'onStateChange': onPlayerStateChange
+        }
+    });
+}
 
 $.ajax({
     url: "https://www.reddit.com/r/" + subreddit + "/hot.json?limit=" + amount,
@@ -28,18 +29,9 @@ $.ajax({
 
         for (let i = 0; i <= amount - 1; i++) {
 
-            urls[i] = result.data.children[i].data.media.oembed.html
-
-            decUri[i] = decodeHTML(urls[i])
+            urls[i] = result.data.children[i].data.url
 
             console.log(decUri[i])
-
-            $( decUri[i]
-            ).appendTo('#videoContainer').attr('id', 'player' + i).css({"width": "600px", "height": "300px"});
-
-            player[i] = $('#player' + i)
         }
     }
 })
-
-player[0].setPlayerState(1)
