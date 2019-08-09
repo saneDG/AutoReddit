@@ -13,59 +13,63 @@ var x = 0;
 var youtubeUrlMatch;
 var actualVideo;
 
-$(".btn").on("click", function (e) {
 
-  amount = $('.form-control').val()
-  console.log(amount)
-  subreddit = $(this).attr("value")
+$(".btn").on("click", function(e) {
 
-  $.ajax({
+    amount = $('.form-control').val()
+    $.each($("input[name='checkbox']:checked"), function() {
+        type = $("input[name='checkbox']:checked").attr("value")
+        console.log(type)
+    });
+    subreddit = $(this).attr("value")
 
-    url: "https://www.reddit.com/r/" + subreddit + "/hot.json?limit=" + amount,
-    success: function (result) {
+    $.ajax({
 
-      amount = result.data.dist;
+        url: "https://www.reddit.com/r/" + subreddit + "/" + type + ".json?limit=" + amount,
+        success: function(result) {
 
-      for (let i = 0; i <= amount - 1; i++) {
+            amount = result.data.dist;
 
-        var url = result.data.children[i].data.url;
+            for (let i = 0; i <= amount - 1; i++) {
 
-        actualVideo = checkIfYoutubeUrl(url)
+                var url = result.data.children[i].data.url;
 
-        if (actualVideo != null) {
+                actualVideo = checkIfYoutubeUrl(url)
 
-          urls[x] = parseYoutubeId(url);
+                if (actualVideo != null) {
 
-          $('#playerContainer').append('<div class="vh-100"><div id="video_' + x + '"></div></div>');
+                    urls[x] = parseYoutubeId(url);
 
-          player[x] = new YT.Player('video_' + x, {
-            height: '100%',
-            width: '100%',
-            videoId: urls[x],
-            events: {
-              'onStateChange': onPlayerStateChange
+                    $('#playerContainer').append('<div class="vh-100"><div id="video_' + x + '"></div></div>');
+
+                    player[x] = new YT.Player('video_' + x, {
+                        height: '100%',
+                        width: '100%',
+                        videoId: urls[x],
+                        events: {
+                            'onStateChange': onPlayerStateChange
+                        }
+                    });
+
+                    x++
+
+                    $('html, body').animate({
+                        scrollTop: $("#video_" + y).offset().top
+                    }, 500);
+
+                }
+
+
+
+                /*
+                console.log(player[i])
+                $("html").keypress(function(data) {
+                    console.log(data)
+                })
+                */
             }
-          });
-
-          x++
-
-          $('html, body').animate({
-            scrollTop: $("#video_" + y).offset().top
-          }, 500);
-
         }
-
-
-
-        /*
-        console.log(player[i])
-        $("html").keypress(function(data) {
-            console.log(data)
-        })
-        */
-      }
-    }
-  });
+    });
 });
 
 
@@ -79,20 +83,20 @@ var lastEndedId;
 
 function onPlayerStateChange(event) {
 
-  if (event.data == YT.PlayerState.ENDED) {
+    if (event.data == YT.PlayerState.ENDED) {
 
-    if (event.target.a.id != lastEndedId) {
+        if (event.target.a.id != lastEndedId) {
 
-      lastEndedId = event.target.a.id;
-      y++;
-      player[y].playVideo();
+            lastEndedId = event.target.a.id;
+            y++;
+            player[y].playVideo();
 
-      $('html, body').animate({
-        scrollTop: $("#video_" + y).offset().top
-      }, 500);
+            $('html, body').animate({
+                scrollTop: $("#video_" + y).offset().top
+            }, 500);
 
+        }
     }
-  }
 }
 
 function skipVideo() {
@@ -100,18 +104,17 @@ function skipVideo() {
 }
 
 function checkIfYoutubeUrl(url) {
-  var regExp = /^(http(s)?:\/\/)?((w){3}.)?youtu(be|.be)?(\.com)?\/.+/;
-  var youtubeUrlMatch = url.match(regExp);
+    var regExp = /^(http(s)?:\/\/)?((w){3}.)?youtu(be|.be)?(\.com)?\/.+/;
+    var youtubeUrlMatch = url.match(regExp);
 
-  console.log(youtubeUrlMatch);
+    console.log(youtubeUrlMatch);
 
-  return youtubeUrlMatch;
+    return youtubeUrlMatch;
 }
 
 function parseYoutubeId(url) {
-  var regExp = /^.*((youtu.be\/)|(v\/)|(\/u\/\w\/)|(embed\/)|(watch\?))\??v?=?([^#\&\?]*).*/;
-  var match = url.match(regExp);
+    var regExp = /^.*((youtu.be\/)|(v\/)|(\/u\/\w\/)|(embed\/)|(watch\?))\??v?=?([^#\&\?]*).*/;
+    var match = url.match(regExp);
 
-  return (match && match[7].length == 11) ? match[7] : false;
+    return (match && match[7].length == 11) ? match[7] : false;
 }
-
